@@ -1,0 +1,615 @@
+﻿========================================
+BLENDZ BARBER STUDIO - FULL SOURCE CODE
+========================================
+
+
+FILE: src/App.tsx
+-----------------
+import { Switch, Route, Router as WouterRouter } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+
+
+// Pages
+import HeroView from "@/pages/HeroView";
+import BookingView from "@/pages/BookingView";
+import AboutView from "@/pages/AboutView";
+import ContactView from "@/pages/ContactView";
+import NotFound from "@/pages/not-found";
+
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  },
+});
+
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/" component={HeroView} />
+      <Route path="/about" component={AboutView} />
+      <Route path="/contact" component={ContactView} />
+      <Route path="/book" component={BookingView} />
+      
+      {/* Catch-all for non-existent routes */}
+      <Route path="/:rest*" component={NotFound} />
+    </Switch>
+  );
+}
+
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <Router />
+        </WouterRouter>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+
+export default App;
+
+
+
+
+FILE: src/components/layout/Navbar.tsx
+-----------------
+import { Link, useLocation } from "wouter";
+import { motion } from "framer-motion";
+import { Scissors } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+
+export default function Navbar() {
+  const [location, setLocation] = useLocation();
+
+
+  const navLinks = [
+    { name: "Home", path: "/" },
+    { name: "About", path: "/about" },
+    { name: "Contact", path: "/contact" },
+  ];
+
+
+  return (
+    <motion.header 
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed top-0 left-0 right-0 z-50 px-6 py-6 md:px-12 flex items-center justify-between bg-gradient-to-b from-background/90 to-transparent backdrop-blur-sm"
+    >
+      {/* Logo */}
+      <Link href="/" className="flex items-center gap-2 group cursor-pointer">
+        <div className="w-10 h-10 flex items-center justify-center border-2 border-primary text-primary group-hover:bg-primary group-hover:text-background transition-colors duration-300">
+          <Scissors className="w-5 h-5" />
+        </div>
+        <span className="font-display text-3xl tracking-widest mt-1">BLENDZ</span>
+      </Link>
+
+
+      {/* Desktop Nav */}
+      <nav className="hidden md:flex items-center gap-10">
+        {navLinks.map((link) => (
+          <Link 
+            key={link.name} 
+            href={link.path}
+            className={cn(
+              "text-lg uppercase tracking-wider font-medium hover:text-primary transition-colors duration-300 relative group cursor-pointer",
+              location === link.path ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            {link.name}
+            <span className={cn(
+              "absolute -bottom-2 left-0 h-[2px] bg-primary transition-all duration-300",
+              location === link.path ? "w-full" : "w-0 group-hover:w-full"
+            )} />
+          </Link>
+        ))}
+      </nav>
+
+
+      {/* CTA */}
+      <button 
+        onClick={() => setLocation("/book")}
+        className="px-6 py-2 border-2 border-primary text-primary font-display text-xl tracking-wider hover:bg-primary hover:text-background hover:shadow-[0_0_20px_rgba(220,20,60,0.4)] transition-all duration-300 uppercase hidden sm:block"
+      >
+        Book Now
+      </button>
+
+
+      {/* Mobile Menu Toggle (Visual only for this mockup) */}
+      <button className="md:hidden flex flex-col gap-1.5 p-2">
+        <span className="w-6 h-[2px] bg-foreground block" />
+        <span className="w-6 h-[2px] bg-foreground block" />
+        <span className="w-4 h-[2px] bg-primary block" />
+      </button>
+    </motion.header>
+  );
+}
+
+
+
+
+FILE: src/pages/HeroView.tsx
+-----------------
+import { useLocation } from "wouter";
+import { motion } from "framer-motion";
+import Navbar from "@/components/layout/Navbar";
+
+
+export default function HeroView() {
+  const [, setLocation] = useLocation();
+
+
+  // Animation variants
+  const containerVars = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.2, delayChildren: 0.3 }
+    }
+  };
+
+
+  const itemVars = {
+    hidden: { y: 40, opacity: 0 },
+    show: { 
+      y: 0, 
+      opacity: 1,
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+    }
+  };
+
+
+  return (
+    <div className="relative min-h-screen w-full overflow-hidden bg-background">
+      <Navbar />
+
+
+      {/* Background Image Layer */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-background/60 z-10" /> {/* Darkening overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent z-10" />
+        <img 
+          src={`${import.meta.env.BASE_URL}images/barber-hero.png`} 
+          alt="Dark dramatic barbershop" 
+          className="w-full h-full object-cover object-center opacity-40 mix-blend-luminosity scale-105 animate-[pulse_10s_ease-in-out_infinite]"
+        />
+      </div>
+
+
+      {/* Diagonal Pattern Overlay */}
+      <div className="absolute inset-0 z-10 bg-diagonal-pattern pointer-events-none mix-blend-overlay opacity-30" />
+
+
+      {/* Main Content */}
+      <div className="relative z-20 h-screen w-full flex flex-col justify-center px-6 md:px-12 lg:px-24 max-w-7xl mx-auto">
+        <motion.div 
+          variants={containerVars}
+          initial="hidden"
+          animate="show"
+          className="max-w-3xl"
+        >
+          {/* Subtitle */}
+          <motion.div variants={itemVars} className="flex items-center gap-4 mb-4">
+            <span className="w-12 h-[2px] bg-primary block" />
+            <h2 className="text-primary font-body uppercase tracking-[0.3em] font-bold text-sm md:text-base">
+              Blendz Barber Studio
+            </h2>
+          </motion.div>
+
+
+          {/* Headline */}
+          <motion.div variants={itemVars} className="mb-6 relative">
+            <h1 className="text-7xl md:text-8xl lg:text-[9rem] font-display leading-[0.85] text-foreground">
+              BLENDZ<br />
+              <span className="text-transparent text-outline hover:text-foreground hover:text-glow transition-all duration-500 cursor-default">BARBER</span> STUDIO
+            </h1>
+            
+            {/* Decorative background element */}
+            <div className="absolute -left-10 top-1/2 -translate-y-1/2 w-64 h-64 bg-primary/10 blur-[100px] rounded-full pointer-events-none" />
+          </motion.div>
+
+
+          {/* Description */}
+          <motion.p 
+            variants={itemVars}
+            className="text-lg md:text-xl text-muted-foreground font-light max-w-lg mb-10 leading-relaxed"
+          >
+            Where precision meets style. Get the cleanest fades and freshest looks in an atmosphere designed for the modern gentleman.
+          </motion.p>
+
+
+          {/* CTA Buttons */}
+          <motion.div variants={itemVars} className="flex flex-wrap items-center gap-6">
+            <button 
+              onClick={() => setLocation("/book")}
+              className="group relative px-8 py-4 bg-primary text-primary-foreground font-display text-2xl tracking-widest uppercase overflow-hidden"
+            >
+              <span className="relative z-10">Book Now</span>
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-0" />
+            </button>
+
+
+            <span className="text-muted-foreground text-sm uppercase tracking-widest animate-pulse">
+              ← Tap to book your appointment
+            </span>
+          </motion.div>
+        </motion.div>
+      </div>
+
+
+      {/* Decorative side text */}
+      <div className="hidden lg:block absolute right-12 top-1/2 -translate-y-1/2 rotate-90 origin-right z-20">
+        <p className="font-display text-muted-foreground/30 text-2xl tracking-[0.5em] whitespace-nowrap">
+          EST. 2024 / PREMIUM GROOMING
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
+
+
+FILE: src/pages/AboutView.tsx
+-----------------
+import { motion } from "framer-motion";
+import { useLocation } from "wouter";
+import Navbar from "@/components/layout/Navbar";
+
+
+export default function AboutView() {
+  const [, setLocation] = useLocation();
+
+
+  const containerVars = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.2, delayChildren: 0.3 },
+    },
+  };
+
+
+  const itemVars = {
+    hidden: { y: 40, opacity: 0 },
+    show: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
+
+
+  return (
+    <div className="relative min-h-screen w-full bg-background text-foreground">
+      <Navbar />
+
+
+      <div className="flex items-center justify-center min-h-screen px-6 md:px-12 lg:px-24">
+        <motion.div
+          variants={containerVars}
+          initial="hidden"
+          animate="show"
+          className="max-w-3xl w-full pt-24 pb-16"
+        >
+          {/* Label */}
+          <motion.div variants={itemVars} className="flex items-center gap-4 mb-6">
+            <span className="w-12 h-[2px] bg-primary block" />
+            <p className="text-primary font-body uppercase tracking-[0.3em] font-bold text-sm">
+              Our Story
+            </p>
+          </motion.div>
+
+
+          {/* Heading */}
+          <motion.h1
+            variants={itemVars}
+            className="font-display text-6xl md:text-7xl lg:text-8xl leading-[0.9] mb-10 text-foreground"
+          >
+            ABOUT<br />
+            <span className="text-primary">BLENDZ</span>
+          </motion.h1>
+
+
+          {/* Divider */}
+          <motion.div variants={itemVars} className="w-full h-[1px] bg-border mb-10" />
+
+
+          {/* Body Text */}
+          <motion.p
+            variants={itemVars}
+            className="text-xl md:text-2xl text-muted-foreground leading-relaxed font-light"
+          >
+            At Blendz Barber Studio, we bring precision, style, and consistency to every cut. From fresh fades to beard detailing, our barbers take pride in clean work and customer care that goes beyond the chair. Walk-ins or appointments — you'll always leave looking sharp and feeling confident. Experience the Blendz difference today in Rialto.
+          </motion.p>
+
+
+          {/* CTA */}
+          <motion.div variants={itemVars} className="mt-12">
+            <button
+              onClick={() => setLocation("/book")}
+              className="group relative px-8 py-4 bg-primary text-primary-foreground font-display text-2xl tracking-widest uppercase overflow-hidden"
+            >
+              <span className="relative z-10">Book Now</span>
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-0" />
+            </button>
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+
+
+
+FILE: src/pages/ContactView.tsx
+-----------------
+import { motion } from "framer-motion";
+import { Phone } from "lucide-react";
+import Navbar from "@/components/layout/Navbar";
+
+
+export default function ContactView() {
+  const containerVars = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.2, delayChildren: 0.3 },
+    },
+  };
+
+
+  const itemVars = {
+    hidden: { y: 40, opacity: 0 },
+    show: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
+
+
+  return (
+    <div className="relative min-h-screen w-full bg-background text-foreground">
+      <Navbar />
+
+
+      <div className="flex items-center justify-center min-h-screen px-6 md:px-12 lg:px-24">
+        <motion.div
+          variants={containerVars}
+          initial="hidden"
+          animate="show"
+          className="max-w-3xl w-full pt-24 pb-16"
+        >
+          {/* Label */}
+          <motion.div variants={itemVars} className="flex items-center gap-4 mb-6">
+            <span className="w-12 h-[2px] bg-primary block" />
+            <p className="text-primary font-body uppercase tracking-[0.3em] font-bold text-sm">
+              Get In Touch
+            </p>
+          </motion.div>
+
+
+          {/* Heading */}
+          <motion.h1
+            variants={itemVars}
+            className="font-display text-6xl md:text-7xl lg:text-8xl leading-[0.9] mb-10 text-foreground"
+          >
+            CONTACT<br />
+            <span className="text-primary">BLENDZ</span>
+          </motion.h1>
+
+
+          {/* Divider */}
+          <motion.div variants={itemVars} className="w-full h-[1px] bg-border mb-10" />
+
+
+          {/* Phone */}
+          <motion.div variants={itemVars}>
+            <a
+              href="tel:+19097913791"
+              className="group inline-flex items-center gap-4 border-2 border-primary px-8 py-6 hover:bg-primary transition-colors duration-300"
+            >
+              <Phone className="w-6 h-6 text-primary group-hover:text-background transition-colors duration-300" />
+              <span className="font-display text-3xl md:text-4xl tracking-widest text-foreground group-hover:text-background transition-colors duration-300">
+                (909) 791-3791
+              </span>
+            </a>
+            <p className="text-muted-foreground text-sm mt-4 ml-1 uppercase tracking-widest">
+              Tap to call us directly
+            </p>
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+
+
+
+FILE: src/pages/BookingView.tsx
+-----------------
+import { useLocation } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Check, Phone, User } from "lucide-react";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+
+
+const services = [
+  { id: "fade", name: "Fade", price: 25, duration: "30 MIN", desc: "Precision skin fade with razor finish.", barber: "Marcus Hill", phone: "(909) 384-2751" },
+  { id: "cut", name: "Cut", price: 20, duration: "25 MIN", desc: "Classic gentlemen's cut and style.", barber: "Dante Rivera", phone: "(951) 627-4380" },
+  { id: "beard", name: "Beard", price: 15, duration: "20 MIN", desc: "Line up, trim, and hot towel finish.", barber: "Jaylen Brooks", phone: "(909) 512-8934" },
+  { id: "full", name: "Full", price: 35, duration: "45 MIN", desc: "Haircut, fade, and full beard service.", barber: "Chris Vega", phone: "(951) 743-0162" }
+];
+
+
+export default function BookingView() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+
+  const handleSelect = (id: string, name: string) => {
+    setSelectedId(id);
+    toast({
+      title: "Service Selected",
+      description: `You've chosen the ${name} service. Proceed to choose a time.`,
+      variant: "default",
+    });
+  };
+
+
+  const containerVars = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+
+  const itemVars = {
+    hidden: { scale: 0.95, opacity: 0, y: 20 },
+    show: { 
+      scale: 1, 
+      opacity: 1, y: 0,
+      transition: { type: "spring", stiffness: 300, damping: 24 }
+    }
+  };
+
+
+  return (
+    <div className="min-h-screen w-full bg-background relative overflow-hidden flex flex-col">
+      {/* Background aesthetics */}
+      <div className="absolute inset-0 bg-diagonal-pattern opacity-10 pointer-events-none" />
+      <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+
+
+      {/* Header */}
+      <header className="relative z-10 w-full p-6 md:p-12 flex justify-between items-center">
+        <button 
+          onClick={() => setLocation("/")}
+          className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-body uppercase tracking-widest text-sm group"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          Back to Home
+        </button>
+        <div className="font-display text-2xl tracking-widest text-foreground">
+          BLENDZ
+        </div>
+      </header>
+
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col items-center justify-center p-6 relative z-10 pb-20">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-5xl md:text-7xl font-display text-foreground mb-2 tracking-wide">
+            BOOK WITH <span className="text-primary">BLENDZ</span>
+          </h1>
+          <p className="text-muted-foreground font-body text-lg uppercase tracking-widest">
+            Select a service to continue
+          </p>
+        </motion.div>
+
+
+        <motion.div 
+          variants={containerVars}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl"
+        >
+          {services.map((service) => {
+            const isSelected = selectedId === service.id;
+            return (
+              <motion.button
+                key={service.id}
+                variants={itemVars}
+                onClick={() => handleSelect(service.id, service.name)}
+                className={`
+                  relative overflow-hidden group text-left p-8 border-2 transition-all duration-500
+                  ${isSelected 
+                    ? 'border-primary bg-primary/10 shadow-[0_0_30px_rgba(220,20,60,0.15)]' 
+                    : 'border-border bg-card hover:border-primary hover:bg-card/50'
+                  }
+                `}
+              >
+                {/* Hover Background Fill Effect */}
+                <div className={`
+                  absolute inset-0 bg-primary translate-y-full transition-transform duration-500 ease-out z-0
+                  ${isSelected ? 'translate-y-0 opacity-10' : 'group-hover:translate-y-0 group-hover:opacity-5'}
+                `} />
+
+
+                {/* Content */}
+                <div className="relative z-10 flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-primary shrink-0" />
+                    <span className="text-xl font-display tracking-wider text-foreground">{service.barber}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-primary shrink-0" />
+                    <span className="text-muted-foreground text-lg">{service.phone}</span>
+                  </div>
+
+
+                  {/* Selection Indicator */}
+                  <AnimatePresence>
+                    {isSelected && (
+                      <motion.div 
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        className="absolute top-0 right-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/40"
+                      >
+                        <Check className="w-3 h-3 text-background" strokeWidth={3} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.button>
+            );
+          })}
+        </motion.div>
+
+
+        {/* Continue Button (Appears when selected) */}
+        <AnimatePresence>
+          {selectedId && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="mt-12"
+            >
+              <button className="px-12 py-4 bg-primary text-primary-foreground font-display text-2xl tracking-widest uppercase hover:shadow-[0_0_30px_rgba(220,20,60,0.3)] transition-all duration-300 hover:-translate-y-1">
+                Choose Time →
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+    </div>
+  );
+}
